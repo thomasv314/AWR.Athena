@@ -16,7 +16,7 @@ Athena <- function() {
 }
 
 #' Constructor of AthenaDriver
-#' 
+#'
 #' @name AthenaDriver
 #' @rdname AthenaDriver-class
 setMethod(initialize, "AthenaDriver",
@@ -44,7 +44,8 @@ setClass("AthenaConnection",
   slots = list(
     region = "character",
     S3OutputLocation = "character",
-    Schema = "character"
+    Schema = "character",
+    Workgroup = "character"
   )
 )
 
@@ -55,6 +56,7 @@ setClass("AthenaConnection",
 #' @param region the AWS region
 #' @param S3OutputLocation S3 bucket where results will be saved to
 #' @param Schema Athena schema to use
+#' @param Workgroup which workgroup to use
 #' @param ... Other options
 #' @rdname Athena
 #' @seealso \href{http://docs.aws.amazon.com/athena/latest/ug/connect-with-jdbc.html#jdbc-options}{Athena Manual} for more connections options.
@@ -62,19 +64,21 @@ setClass("AthenaConnection",
 #' @examples
 #' \dontrun{
 #' require(DBI)
-#' con <- dbConnect(AWR.Athena::Athena(), region='us-west-2', 
-#'                  S3OutputLocation='s3://nfultz-athena-staging', 
-#'                  Schema='default')
+#' con <- dbConnect(AWR.Athena::Athena(), region='us-west-2',
+#'                  S3OutputLocation='s3://nfultz-athena-staging',
+#'                  Schema='default', Workgroup='foo')
 #' dbListTables(con)
 #' dbGetQuery(con, "Select count(*) from sampledb.elb_logs")
 #' }
 setMethod("dbConnect", "AthenaDriver",
-          function(drv, region, S3OutputLocation, Schema, ...) {
+          function(drv, region, S3OutputLocation, Schema, Workgroup, ...) {
 
   con <- callNextMethod(drv, url=sprintf('jdbc:awsathena://athena.%s.amazonaws.com:443/', region),
                    S3OutputLocation=S3OutputLocation,
                    Schema=Schema,
-                   AWSCredentialsProviderClass="com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain", ...)
+                   AWSCredentialsProviderClass="com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain",
+                   Workgroup=Workgroup,
+                   ...)
 
-  new("AthenaConnection", jc = con@jc, identifier.quote = drv@identifier.quote, region=region,S3OutputLocation=S3OutputLocation, Schema=Schema)
+  new("AthenaConnection", jc = con@jc, identifier.quote = drv@identifier.quote, region=region, S3OutputLocation=S3OutputLocation, Schema=Schema, Workgroup=Workgroup)
 })
